@@ -49,6 +49,8 @@ Before you can run and test the application locally, you'll need to install:
 
 ## Making Changes
 
+Follow the repository's [coding standards](.github/instructions/code-standards.instructions.md) for comments, API documentation, and TypeScript formatting. Comments should explain intent rather than restating code, exported data-layer functions require complete TSDoc/JSDoc, and reusable Astro component props must be documented.
+
 ### Data Layer (Drizzle + Node SQLite)
 
 - Define tables in `db/schema.ts`; generate a migration with `npm run db:generate` after schema changes

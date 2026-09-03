@@ -34,6 +34,10 @@ This is a crowdfunding platform for games with a developer theme. The applicatio
 
 ### Code formatting requirements
 
+- Follow the shared commenting, API documentation, and TypeScript formatting standards in [`code-standards.instructions.md`](instructions/code-standards.instructions.md)
+- Comments must explain intent, constraints, or non-obvious decisions rather than restating code; update or remove comments whenever the related code changes
+- Every exported function in `db/` and `src/lib/` must include TSDoc/JSDoc for its purpose, all parameters, and its return value
+- Every reusable Astro component must document each property in its `Props` interface
 - Use TypeScript with explicit types for function parameters and return values, especially in the data layer (`db/`, `src/lib/`)
 - Frontend code (TypeScript, Astro) must pass ESLint checks (`npm run lint`)
 
