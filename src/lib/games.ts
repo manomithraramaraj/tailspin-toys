@@ -1,7 +1,12 @@
-import { eq, asc } from 'drizzle-orm';
+import { and, asc, eq, inArray, type SQL } from 'drizzle-orm';
 import type { Database } from './db';
 import { games, categories, publishers } from '../../db/schema';
-import type { Game } from '../types/game';
+import type { Category, Game, Publisher } from '../types/game';
+
+export interface GameFilters {
+    categoryNames?: string[];
+    publisherName?: string;
+}
 
 const gameSelection = {
     id: games.id,
@@ -50,20 +55,88 @@ function baseGamesQuery(db: Database) {
         .leftJoin(publishers, eq(games.publisherId, publishers.id));
 }
 
-/** All games ordered by title. */
-export async function getAllGames(db: Database): Promise<Game[]> {
-    const rows = await baseGamesQuery(db).orderBy(asc(games.title));
+/**
+ * Lists games matching the supplied category and publisher names.
+ *
+ * Multiple categories are combined with OR semantics, while a publisher is
+ * combined with the category selection using AND semantics.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @param filters - Optional exact category and publisher names to match.
+ * @returns Matching games ordered alphabetically by title.
+ */
+export async function getFilteredGames(db: Database, filters: GameFilters = {}): Promise<Game[]> {
+    const conditions: SQL[] = [];
+
+    if (filters.categoryNames?.length) {
+        conditions.push(inArray(categories.name, filters.categoryNames));
+    }
+
+    if (filters.publisherName) {
+        conditions.push(eq(publishers.name, filters.publisherName));
+    }
+
+    const rows = await baseGamesQuery(db)
+        .where(and(...conditions))
+        .orderBy(asc(games.title));
     return rows.map(mapGame);
 }
 
-/** All game ids ordered by title. */
+/**
+ * Lists every game in deterministic title order.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @returns All games ordered alphabetically by title.
+ */
+export async function getAllGames(db: Database): Promise<Game[]> {
+    return getFilteredGames(db);
+}
+
+/**
+ * Lists all game identifiers in deterministic title order.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @returns All game identifiers ordered alphabetically by game title.
+ */
 export async function getAllGameIds(db: Database): Promise<number[]> {
     const rows = await db.select({ id: games.id }).from(games).orderBy(asc(games.title));
     return rows.map((row) => row.id);
 }
 
-/** A single game by id, or null when it does not exist. */
+/**
+ * Finds a game by its identifier.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @param id - Identifier of the game to find.
+ * @returns The matching game, or null when the identifier does not exist.
+ */
 export async function getGameById(db: Database, id: number): Promise<Game | null> {
     const row = await baseGamesQuery(db).where(eq(games.id, id)).get();
     return row ? mapGame(row) : null;
+}
+
+/**
+ * Lists categories available for filtering.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @returns All categories ordered alphabetically by name.
+ */
+export async function getAllCategories(db: Database): Promise<Category[]> {
+    return db
+        .select({ id: categories.id, name: categories.name })
+        .from(categories)
+        .orderBy(asc(categories.name));
+}
+
+/**
+ * Lists publishers available for filtering.
+ *
+ * @param db - Injectable database supplied by production pages or in-memory tests.
+ * @returns All publishers ordered alphabetically by name.
+ */
+export async function getAllPublishers(db: Database): Promise<Publisher[]> {
+    return db
+        .select({ id: publishers.id, name: publishers.name })
+        .from(publishers)
+        .orderBy(asc(publishers.name));
 }

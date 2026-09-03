@@ -35,6 +35,20 @@ npm run dev
 
 `predev` migrates and seeds the local database first. Then navigate to the [website](http://localhost:4321) to see the site!
 
+### Filter the game catalog
+
+The homepage can filter games immediately by multiple categories and one publisher.
+Selections are stored in human-readable query parameters, so filtered catalog views
+can be bookmarked or shared:
+
+```text
+/?category=Puzzle&category=Strategy&publisher=GitHub+Games
+```
+
+Selected categories use OR matching, while the publisher is combined with them
+using AND matching. Unknown names remain visible as active filters and return no
+matching games until they are removed or all filters are cleared.
+
 To preview a production build instead:
 
 ```bash
